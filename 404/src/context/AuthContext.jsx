@@ -1,5 +1,6 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { auth, onAuthStateChanged, db, doc, getDoc } from "../services/firebase";  // ✅ Ensure correct import
+import { createContext, useContext, useState, useEffect } from "react";
+import { auth } from "../services/firebase";
+import { onAuthStateChanged } from "firebase/auth";
 
 const AuthContext = createContext();
 
@@ -8,17 +9,19 @@ export function AuthProvider({ children }) {
   const [role, setRole] = useState(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      if (currentUser) {
-        const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-        setRole(userDoc.exists() ? userDoc.data().role : null);
-      }
+      if (!currentUser) setRole(null); // Reset role if user logs out
     });
+
     return () => unsubscribe();
   }, []);
 
-  return <AuthContext.Provider value={{ user, role }}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, role, setUser, setRole }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {

@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { db, auth, collection, getDocs, doc, setDoc } from "../services/firebase";
+import { db, auth } from "../services/firebase";
+import { collection, getDocs, doc, setDoc } from "firebase/firestore";
+import { signOut } from "firebase/auth";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 function StudentDashboard() {
   const [candidates, setCandidates] = useState([]);
   const [hasVoted, setHasVoted] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCandidates = async () => {
@@ -21,9 +27,22 @@ function StudentDashboard() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      localStorage.clear();  // Clears any stored tokens or user data
+      sessionStorage.clear(); // Clears session storage if used
+      navigate("/");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
   return (
     <div>
-      <h2>Welcome to Student Dashboard</h2>
+      <h2>Welcome, {user?.email} to Student Dashboard</h2>
+      <button onClick={handleLogout} style={{ background: "red", color: "white", padding: "10px", border: "none", cursor: "pointer" }}>
+        Logout
+      </button>
       <h3>Election Candidates</h3>
       {candidates.map((candidate) => (
         <div key={candidate.id}>
