@@ -1,71 +1,79 @@
 import React, { useState } from "react";
-import { auth, db, createUserWithEmailAndPassword, setDoc, doc } from "../services/firebase";
 import { useNavigate } from "react-router-dom";
 
 function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("student");
-  const [fullName, setFullName] = useState("");
-  const [collegeRegNo, setCollegeRegNo] = useState("");
-  const [parentEmail, setParentEmail] = useState("");
-  const [parentPhone, setParentPhone] = useState("");
-  const [yearBranch, setYearBranch] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    setError("");
+
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const userId = userCredential.user.uid;
+      const response = await fetch("http://localhost:8000/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ "email" : email, "password" : password }),
+      });
 
-      const userData = {
-
-        role,
-        createdAt: new Date()
-      };
-
-      if (role === "student") {
-        userData.fullName = fullName;
-        userData.collegeRegNo = collegeRegNo;
-        userData.parentEmail = parentEmail;
-        userData.parentPhone = parentPhone;
-        userData.yearBranch = yearBranch;
+      const data = await response.json();
+      if (response.ok) {
+        console.log("Registration Success:", data);
+        navigate("/login"); // Redirect to login page after registration
+      } else {
+        setError(data.error);
       }
-
-      await setDoc(doc(db, role, userId), userData);
-      console.log(userData);
-      navigate(`/${role}`);
     } catch (error) {
-      console.error("Registration failed", error);
+      console.error("Network error:", error);
+      setError("Failed to connect to the server.");
     }
   };
 
   return (
-    <div>
-      <h2>Register</h2>
-      <form onSubmit={handleRegister}>
-        <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        {role === "student" && (
-          <>
-            <input type="text" placeholder="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
-            <input type="text" placeholder="College Registration No" value={collegeRegNo} onChange={(e) => setCollegeRegNo(e.target.value)} required />
-            <input type="email" placeholder="Parent's Email" value={parentEmail} onChange={(e) => setParentEmail(e.target.value)} required />
-            <input type="text" placeholder="Parent's Phone" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} required />
-            <input type="text" placeholder="Year & Branch" value={yearBranch} onChange={(e) => setYearBranch(e.target.value)} required />
-          </>
-        )}
-        <select value={role} onChange={(e) => setRole(e.target.value)}>
-          <option value="student">Student</option>
-          <option value="faculty">Faculty</option>
-          <option value="admin">Admin</option>
-          <option value="parent">Parent</option>
-          <option value="staff">Staff</option>
-          <option value="doctor">Doctor</option>
-        </select>
-        <button type="submit">Register</button>
-      </form>
+    <div className="container mt-5">
+      <div className="row justify-content-center">
+        <div className="col-md-6">
+          <div className="card shadow p-4">
+            <h2 className="text-center mb-4">Register</h2>
+            {error && <div className="alert alert-danger">{error}</div>}
+            <form onSubmit={handleRegister}>
+              <div className="mb-3">
+                <label className="form-label">Email</label>
+                <input
+                  type="email"
+                  className="form-control"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label">Password</label>
+                <input
+                  type="password"
+                  className="form-control"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+
+              <button type="submit" className="btn btn-primary w-100">
+                Register
+              </button>
+            </form>
+            <p className="text-center mt-3">
+              Already have an account?{" "}
+              <a href="/login" className="text-decoration-none">
+                Login
+              </a>
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
