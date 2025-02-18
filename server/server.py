@@ -1,15 +1,16 @@
 from fastapi import FastAPI
-from classModels import *
 from fastapi.middleware.cors import CORSMiddleware
 
+from routes.session import router as session_routes
 from routes.election import router as election_routes
 from routes.student import router as student_routes
 from routes.faculty import router as faculty_routes
 
 server = FastAPI()
 
+server.include_router(session_routes)
 server.include_router(election_routes, prefix='/election')
-server.include_router(election_routes, prefix='/student')
+server.include_router(student_routes, prefix='/student')
 server.include_router(faculty_routes, prefix='/faculty')
 
 origins = [

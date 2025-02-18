@@ -7,7 +7,9 @@ router = APIRouter()
 
 @router.post('/signup')
 def signup(user: User):
-    
+
+    user.data['id'] = "1a"
+
     if user.role == "student":
         validated_user = Student(**user.data)
     elif user.role == "faculty":
@@ -16,31 +18,40 @@ def signup(user: User):
         raise HTTPException(status_code=400, detail="Invalid role. Must be 'student' or 'faculty'.")
 
     response = supabase.auth.sign_up({
-        "email": validated_user.email,
-        "password": validated_user.password
+        "email": user.data['email'],
+        "password": user.data['password']
     })
 
-    supabase.table(user.role.capitalize()).insert(dict(validated_user)).execute()
-
     if response and response.user:
-        return {"status": "Successfully signed up"}
+        validated_user.id = response.user.id
+        try:
+            role = user.role.capitalize()
+            inserted_data = dict(validated_user)
+            inserted_data.pop("password")
+            response = supabase.table(role).insert(inserted_data).execute()
+            return {"status": "Successfully signed up", "response" : response}
+        except :
+            raise HTTPException(status_code=400, detail="Unable to insert the user data.")
     
     raise HTTPException(status_code=400, detail="Signup failed. Email may already be in use.")
 
 @router.post('/signin')
 def signin(user : LoginDetails):
-    responce = supabase.auth.sign_in_with_password({
-        "email" : user.email,
-        "password" : user.password
-    })
+    try :
+        responce = supabase.auth.sign_in_with_password({
+            "email" : user.email,
+            "password" : user.password
+        })
 
-    if responce.session :
-        return {
-            "access_token" : responce.session.access_token,
-            "refresh_token" : responce.session.refresh_token
-        }
-    else :
-        raise HTTPException(status_code=400, detail="Signin failed. Email may not be verifed yet.")
+        if responce.session :
+            return {
+                "access_token" : responce.session.access_token,
+                "refresh_token" : responce.session.refresh_token
+            }
+        else :
+            raise HTTPException(status_code=400, detail="Signin failed. Email may not be verifed yet.")
+    except :
+        raise HTTPException(status_code=401, detail="Invalid Credentials.")
 
 @router.post('/signout')
 def signout(tokens : Annotated[TokenRequest, Header()]):

@@ -5,6 +5,7 @@ class User(BaseModel):
     data: dict
 
 class Student(BaseModel):
+    id : str
     branch: str
     club: str
     collegeRegNo: str
@@ -18,6 +19,7 @@ class Student(BaseModel):
     password: str
 
 class Faculty(BaseModel):
+    id : str
     collegeId: str
     department: str
     desgination: str
