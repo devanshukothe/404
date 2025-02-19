@@ -18,14 +18,15 @@ def get_student_details(id : str):
     response = supabase.table('Student').select("*").eq("id", id).execute()
 
     if response.count != 0:
-        return dict(response)
+        return dict(response.data[0])
     else :
         raise HTTPException(status_code=404, detail="User details not found, may be access token is incorrect or failed.") 
 
 def get_faculty_details(id : str):
-    response = supabase.table('faculty').select("*").eq("id", id).execute()
+    response = supabase.table('Faculty').select("*").eq("id", id).execute()
 
     if response.count != 0:
-        return dict(response)
+        return dict(response.data[0])
     else :
         raise HTTPException(status_code=404, detail="User details not found, may be access token is incorrect or failed.") 
+    

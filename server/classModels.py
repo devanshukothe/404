@@ -36,3 +36,30 @@ class LoginDetails(BaseModel):
 class TokenRequest(BaseModel):
     access_token : str
     refresh_token : str
+
+class ElectionDetails(BaseModel):
+    poistion : str
+    year_eligible : dict
+    branch_eligible : dict
+    requirments : str
+    start : str
+    end : str
+
+class Candidate(BaseModel) :
+    electionId : int
+    manifesto : str
+    proposals : str
+
+class Vote(BaseModel) :
+    candidateId : str
+    electionId : str
+
+class DoctorAdvice(BaseModel):
+    collegeRegNo : str
+    symptoms : str
+    advice : str
+    no_of_rest_days : int
+
+class InOutReg(BaseModel):
+    collegeRegNo : str
+    in_or_out : str
