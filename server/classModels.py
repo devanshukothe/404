@@ -52,7 +52,7 @@ class Candidate(BaseModel) :
 
 class Vote(BaseModel) :
     candidateId : str
-    electionId : str
+    electionId : int
 
 class DoctorAdvice(BaseModel):
     collegeRegNo : str

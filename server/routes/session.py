@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Header
 from classModels import User, Student, Faculty, LoginDetails, TokenRequest
 from supabase_client import supabase
 from typing import Annotated
+from dependencies import get_user_role
 
 router = APIRouter()
 
@@ -37,16 +38,16 @@ def signup(user: User):
 
 @router.post('/signin')
 def signin(user : LoginDetails):
+    
     try :
-        responce = supabase.auth.sign_in_with_password({
-            "email" : user.email,
-            "password" : user.password
-        })
+        responce = supabase.auth.sign_in_with_password(dict(user))
 
         if responce.session :
+            role = get_user_role(responce.session.access_token)
             return {
                 "access_token" : responce.session.access_token,
-                "refresh_token" : responce.session.refresh_token
+                "refresh_token" : responce.session.refresh_token,
+                "role" : role
             }
         else :
             raise HTTPException(status_code=400, detail="Signin failed. Email may not be verifed yet.")

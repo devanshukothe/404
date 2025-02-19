@@ -38,12 +38,14 @@ def apply_as_candiate(candidate : Candidate, id : str = Depends(get_user_id)):
 
     if candidate_details['year'] in election_details['year_eligible']['years'] and candidate_details['branch'] in election_details['branch_eligible']['branch']:
         try :
+
             response = supabase.table('Candidates').insert(candidate).execute()
-            supabase.table('Votes').insert({
+            vote_details = {
                 "candidateId" : id,
-                "electionId" : candidate.electionId,
+                "electionId" : candidate['electionId'],
                 "votes" : 0
-            }).execute()
+            }
+            vote_response = supabase.table('Votes').insert(vote_details).execute()
 
             return response
         except :
@@ -80,7 +82,12 @@ def vote(vote : Vote, id : str = Depends(get_user_id)):
         raise HTTPException(status_code=401, detail="You have alreday voted once.")
     
     try :
-        supabase.table('Votes').update({"votes" : supabase.func("votes + 1")}).eq("candidateId", vote.candidateId).eq("electionId", vote.electionId).execute()
+        votes = dict(supabase.table('Votes').select('*').eq("candidateId", vote.candidateId).eq("electionId", vote.electionId).execute().data[0])['votes']
+        supabase.table('Votes').update({"votes" : votes +  1}).eq("candidateId", vote.candidateId).eq("electionId", vote.electionId).execute()
+        supabase.table('Voted').insert({
+            "voterId" : id,
+            "electionId" : vote.electionId
+        }).execute()
         return { "status" : "Your vote is counted successfully!" }
     except :
         raise HTTPException(status_code=400, detail="Your Vote is not count due to some issue. Please try again!")
