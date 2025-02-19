@@ -2,7 +2,7 @@ from typing import Annotated
 from fastapi import Header, HTTPException
 from supabase_client import supabase
 
-def get_user_id(access_token: str = Header(..., alias="access_token"), refresh_token: str = Header(None, alias="refresh_token")):
+def get_user_id(access_token: str = Header(..., alias="access_token")):
     try :
         response = supabase.auth.get_user(access_token)
     except :
@@ -10,12 +10,6 @@ def get_user_id(access_token: str = Header(..., alias="access_token"), refresh_t
     else :
         if response.user:
             return response.user.id
-        else:
-            new_tokens = supabase.auth.refresh_token(refresh_token)
-            if new_tokens:
-                new_response = supabase.auth.get_user(new_tokens.access_token)
-                if new_response.user:
-                    return new_response.user.id
 
         raise HTTPException(status_code=401, detail="Invalid tokens")
 

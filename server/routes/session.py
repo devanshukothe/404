@@ -54,14 +54,23 @@ def signin(user : LoginDetails):
         raise HTTPException(status_code=401, detail="Invalid Credentials.")
 
 @router.post('/signout')
-def signout(tokens : Annotated[TokenRequest, Header()]):
+def signout():
     try:
-        response = supabase.auth.sign_out(tokens.access_token)
-
-        if response.get("error"):
+    
+        response = supabase.auth.sign_out()
+ 
+        if response and isinstance(response, dict) and response.get("error"):
             raise HTTPException(status_code=400, detail="Signout failed")
 
         return {"message": "User signout successfully"}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.get('/access_token')
+def get_new_access_token(refresh_token: str = Header(None, alias="refresh_token")):
+    new_tokens = supabase.auth.refresh_session(refresh_token)
+    if new_tokens.session:
+        return { "access_token" : new_tokens.session.access_token, "refresh_token" : new_tokens.session.refresh_token }
+    else :
+        raise HTTPException(status_code=401, detail="Invalid tokens")
